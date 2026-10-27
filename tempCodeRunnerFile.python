@@ -1,0 +1,91 @@
+prak.py
+import tkinter as tk
+from tkinter import messagebox
+import sqlite3
+
+def create_db():
+    conn = sqlite3.connect("nilai_siswa.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS nilai_siswa (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nama_siswa TEXT NOT NULL,
+            biologi INTEGER NOT NULL,
+            fisika INTEGER NOT NULL,
+            inggris INTEGER NOT NULL,
+            prediksi_fakultas TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+create_db()
+
+def prediksi_fakultas(biologi, fisika, inggris):
+    if biologi > fisika and biologi > inggris:
+        return "Kedokteran"
+    elif fisika > biologi and fisika > inggris:
+        return "Teknik"
+    elif inggris > biologi and inggris > fisika:
+        return "Bahasa"
+    else:
+        return "Tidak Dapat Ditentukan"
+
+def submit_nilai():
+    nama = entry_nama.get().strip()
+    try:
+        bio = int(entry_bio.get())
+        fis = int(entry_fis.get())
+        ing = int(entry_ing.get())
+    except ValueError:
+        messagebox.showerror("Error", "Nilai harus berupa angka!")
+        return
+
+    if not nama:
+        messagebox.showerror("Error", "Nama siswa tidak boleh kosong!")
+        return
+
+    hasil_prediksi = prediksi_fakultas(bio, fis, ing)
+
+    conn = sqlite3.connect("nilai_siswa.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO nilai_siswa (nama_siswa, biologi, fisika, inggris, prediksi_fakultas)
+        VALUES (?, ?, ?, ?, ?)
+    """, (nama, bio, fis, ing, hasil_prediksi))
+    conn.commit()
+    conn.close()
+
+
+# ======================================================================
+# Bagian di bawah ini TIDAK ADA di foto (foto cuma sampai baris 57).
+# Aku lengkapi sendiri supaya programnya bisa jalan. Ganti kalau
+# kodemu yang asli beda.
+# ======================================================================
+    messagebox.showinfo("Hasil Prediksi", f"{nama} cocok masuk: {hasil_prediksi}")
+
+root = tk.Tk()
+root.title("Prediksi Fakultas Siswa")
+root.geometry("400x420")
+
+tk.Label(root, text="Prediksi Fakultas", font=("Arial", 16, "bold")).pack(pady=10)
+
+tk.Label(root, text="Nama Siswa").pack()
+entry_nama = tk.Entry(root, width=35)
+entry_nama.pack()
+
+tk.Label(root, text="Nilai Biologi").pack()
+entry_bio = tk.Entry(root, width=35)
+entry_bio.pack()
+
+tk.Label(root, text="Nilai Fisika").pack()
+entry_fis = tk.Entry(root, width=35)
+entry_fis.pack()
+
+tk.Label(root, text="Nilai Inggris").pack()
+entry_ing = tk.Entry(root, width=35)
+entry_ing.pack()
+
+tk.Button(root, text="Submit Nilai", command=submit_nilai).pack(pady=15)
+
+root.mainloop()
